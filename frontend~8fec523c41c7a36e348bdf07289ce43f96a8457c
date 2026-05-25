@@ -1,0 +1,227 @@
+import React, { useState } from "react";
+import axios from "axios";
+
+function App() {
+  const [role, setRole] = useState("");
+  const [experience, setExperience] = useState("");
+  const [sections, setSections] = useState([]);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleCheckbox = (value) => {
+    setSections((prev) =>
+      prev.includes(value)
+        ? prev.filter((s) => s !== value)
+        : [...prev, value]
+    );
+  };
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError("");
+    setData(null);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/form_generation",
+        {
+          role,
+          experience,
+          sections
+        }
+      );
+
+      console.log("API RESPONSE:", response.data);
+
+      if (response.data.error) {
+        setError(response.data.error);
+      } else {
+        setData(response.data);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("⚠️ Failed to connect to backend");
+    }
+
+    setLoading(false);
+  };
+
+  return (
+    <div style={styles.container}>
+      <h1 style={styles.title}>PMS Feedback Generator 🚀</h1>
+
+      {/* FORM */}
+      <div style={styles.card}>
+        <h2>Enter Details</h2>
+
+        <input
+          style={styles.input}
+          placeholder="Role (e.g., Software Engineer)"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+        />
+
+        <input
+          style={styles.input}
+          placeholder="Experience (e.g., 2 years)"
+          value={experience}
+          onChange={(e) => setExperience(e.target.value)}
+        />
+
+        <h3>Select Sections</h3>
+
+        <div style={styles.checkboxGroup}>
+          <label>
+            <input
+              type="checkbox"
+              onChange={() => handleCheckbox("softskills")}
+            />
+            Soft Skills
+          </label>
+
+          <label>
+            <input
+              type="checkbox"
+              onChange={() => handleCheckbox("technical")}
+            />
+            Technical
+          </label>
+
+          <label>
+            <input
+              type="checkbox"
+              onChange={() => handleCheckbox("leadership")}
+            />
+            Leadership
+          </label>
+        </div>
+
+        <button style={styles.button} onClick={handleSubmit}>
+          Generate Feedback
+        </button>
+      </div>
+
+      {/* LOADING */}
+      {loading && <p style={styles.loading}>Generating... ⏳</p>}
+
+      {/* ERROR */}
+      {error && <p style={styles.error}>{error}</p>}
+
+      {/* OUTPUT */}
+      {data && (
+        <div style={styles.card}>
+          <h2>Generated Feedback</h2>
+
+          {/* Employee Info */}
+          <div style={styles.section}>
+            <h3>Employee Info</h3>
+            <p><b>Role:</b> {data.employee_information?.role || "N/A"}</p>
+            <p><b>Experience:</b> {data.employee_information?.experience || "N/A"}</p>
+          </div>
+
+          {/* Feedback Sections */}
+          <div style={styles.section}>
+            <h3>Feedback Sections</h3>
+
+            {data.feedback_sections &&
+            Object.keys(data.feedback_sections).length > 0 ? (
+              Object.entries(data.feedback_sections).map(([section, value]) => (
+                <div key={section} style={styles.subCard}>
+                  <h4>{section.toUpperCase()}</h4>
+
+                  {value.questions?.map((q, idx) => (
+                    <div key={idx} style={styles.question}>
+                      <p>• {Object.values(q)[0]}</p>
+                    </div>
+                  ))}
+                </div>
+              ))
+            ) : (
+              <p>No feedback sections available</p>
+            )}
+          </div>
+
+          {/* Open Feedback */}
+          <div style={styles.section}>
+            <h3>Open Feedback</h3>
+
+            {data.open_ended_feedback ? (
+              <div>
+                <p><b>Areas for Improvement:</b> {data.open_ended_feedback.areas_for_improvement}</p>
+                <p><b>Strengths:</b> {data.open_ended_feedback.strengths}</p>
+                <p><b>Suggestions:</b> {data.open_ended_feedback.suggestions_for_growth}</p>
+              </div>
+            ) : (
+              <p>No question available</p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* STYLES */
+const styles = {
+  container: {
+    fontFamily: "Arial",
+    padding: "30px",
+    background: "#f5f7fa",
+    minHeight: "100vh"
+  },
+  title: {
+    textAlign: "center",
+    marginBottom: "20px"
+  },
+  card: {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "10px",
+    boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+    marginBottom: "20px"
+  },
+  input: {
+    width: "100%",
+    padding: "10px",
+    marginBottom: "10px",
+    borderRadius: "5px",
+    border: "1px solid #ccc"
+  },
+  checkboxGroup: {
+    display: "flex",
+    gap: "15px",
+    marginBottom: "15px"
+  },
+  button: {
+    width: "100%",
+    padding: "10px",
+    background: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer"
+  },
+  loading: {
+    textAlign: "center",
+    color: "#007bff"
+  },
+  error: {
+    color: "red",
+    textAlign: "center"
+  },
+  section: {
+    marginTop: "20px"
+  },
+  subCard: {
+    background: "#f1f3f5",
+    padding: "10px",
+    borderRadius: "8px",
+    marginBottom: "10px"
+  },
+  question: {
+    marginLeft: "10px"
+  }
+};
+
+export default App;
