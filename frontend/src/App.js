@@ -1,11 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
 
-const response = await axios.post(
-  `${process.env.REACT_APP_API_URL}/form_generation`,
-  { role, experience, sections }
-);
-
 const PRESET_SECTIONS = [
   { id: "Soft Skills", label: "Soft Skills" },
   { id: "Technical", label: "Technical" },
