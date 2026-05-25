@@ -10,6 +10,10 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+@app.route("/ping")
+def ping():
+    return "pong", 200
+
 # Initialize LLM
 @app.route("/form_generation", methods=["POST"])
 def form_generation():
